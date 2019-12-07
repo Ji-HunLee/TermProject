@@ -1,0 +1,97 @@
+import cv2
+import numpy as np
+from mtcnn.mtcnn import MTCNN
+from imageai.Detection import VideoObjectDetection
+import os
+import time
+
+start = time.time()
+
+cap = cv2.VideoCapture('videos/test.mp4')
+width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)*0.5)
+height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)*0.5)
+
+fourcc = cv2.VideoWriter_fourcc(*'XVID')
+fps = 30
+
+writer = cv2.VideoWriter('videos/test_pre.mp4', fourcc, fps, (width, height))
+kernel = np.ones((2,2), np.uint8)
+
+
+while True:
+    ret,img = cap.read()
+
+    
+    if ret == False:
+        break
+    
+    img = cv2.resize(img, None, fx = 0.5, fy = 0.5, interpolation = cv2.INTER_CUBIC)
+    img = cv2.bilateralFilter(img, 9, 30, 30)
+    img = cv2.morphologyEx(img, cv2.MORPH_OPEN, kernel)
+    writer.write(img)
+        
+        
+cap.release()
+writer.release()
+cv2.destroyAllWindows()
+
+################yolo적용############
+execution_path = os.getcwd()
+
+detector = VideoObjectDetection()
+detector.setModelTypeAsYOLOv3()
+detector.setModelPath( os.path.join(execution_path , "models/yolo.h5"))
+detector.loadModel()
+
+video_path = detector.detectObjectsFromVideo(
+    input_file_path=os.path.join(execution_path, "videos/test_pre.mp4"),
+    output_file_path=os.path.join(execution_path, "videos/test_YOLO"),
+    frames_per_second=30, log_progress=True)
+print(video_path)
+
+
+
+detector = MTCNN()
+cap = cv2.VideoCapture('videos/test_YOLO.avi')
+
+width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+fourcc = cv2.VideoWriter_fourcc(*'XVID')
+fps = 30
+
+writer = cv2.VideoWriter('videos/test_YOLO_mtcnn.mp4', fourcc, fps, (width, height))
+
+while True: 
+        
+    ret, frame = cap.read()
+    
+    if ret == False: 
+        break
+        
+    result = detector.detect_faces(frame)
+    
+    if result != []:
+        for person in result:
+            bounding_box = person['box']
+            keypoints = person['keypoints']
+    
+            cv2.rectangle(frame,
+                          (bounding_box[0], bounding_box[1]),
+                          (bounding_box[0]+bounding_box[2], bounding_box[1] + bounding_box[3]),
+                          (0,155,255),
+                          2)
+    
+            cv2.circle(frame,(keypoints['left_eye']), 2, (0,155,255), 2)
+            cv2.circle(frame,(keypoints['right_eye']), 2, (0,155,255), 2)
+            cv2.circle(frame,(keypoints['nose']), 2, (0,155,255), 2)
+            cv2.circle(frame,(keypoints['mouth_left']), 2, (0,155,255), 2)
+            cv2.circle(frame,(keypoints['mouth_right']), 2, (0,155,255), 2)
+      
+        writer.write(frame)
+        
+   
+cap.release()
+writer.release()
+cv2.destroyAllWindows()
+
+print(time.time() - start)
