@@ -3,33 +3,28 @@ import numpy as np
 from mtcnn.mtcnn import MTCNN
 from imageai.Detection import VideoObjectDetection
 import os
-import time
 
-start = time.time()
-
-cap = cv2.VideoCapture('videos/test.mp4')
+cap = cv2.VideoCapture('videos/v3_raw.mp4')
 width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)*0.5)
 height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)*0.5)
 
 fourcc = cv2.VideoWriter_fourcc(*'XVID')
 fps = 30
 
-writer = cv2.VideoWriter('videos/test_pre.mp4', fourcc, fps, (width, height))
+writer = cv2.VideoWriter('videos/v3.mp4', fourcc, fps, (width, height))
 kernel = np.ones((2,2), np.uint8)
-
-
+n = 0
 while True:
     ret,img = cap.read()
 
-    
+    n += 1
     if ret == False:
         break
-    
-    img = cv2.resize(img, None, fx = 0.5, fy = 0.5, interpolation = cv2.INTER_CUBIC)
-    img = cv2.bilateralFilter(img, 9, 30, 30)
-    img = cv2.morphologyEx(img, cv2.MORPH_OPEN, kernel)
-    writer.write(img)
-        
+    if n%3 != 0:
+        img = cv2.resize(img, None, fx = 0.5, fy = 0.5, interpolation = cv2.INTER_CUBIC)
+        img = cv2.bilateralFilter(img, 9, 30, 30)
+        img = cv2.morphologyEx(img, cv2.MORPH_OPEN, kernel)
+        writer.write(img)
         
 cap.release()
 writer.release()
@@ -44,22 +39,22 @@ detector.setModelPath( os.path.join(execution_path , "models/yolo.h5"))
 detector.loadModel()
 
 video_path = detector.detectObjectsFromVideo(
-    input_file_path=os.path.join(execution_path, "videos/test_pre.mp4"),
-    output_file_path=os.path.join(execution_path, "videos/test_YOLO"),
+    input_file_path=os.path.join(execution_path, "videos/v3.mp4"),
+    output_file_path=os.path.join(execution_path, "videos/v3_YOLO"),
     frames_per_second=30, log_progress=True)
 print(video_path)
 
-
+############ mtcnn 적용 ###############
 
 detector = MTCNN()
-cap = cv2.VideoCapture('videos/test_YOLO.avi')
+cap = cv2.VideoCapture('videos/v3_YOLO.avi')
 
 width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 fourcc = cv2.VideoWriter_fourcc(*'XVID')
 fps = 30
 
-writer = cv2.VideoWriter('videos/test_YOLO_mtcnn.mp4', fourcc, fps, (width, height))
+writer = cv2.VideoWriter('videos/v3_YOLO_mtcnn.mp4', fourcc, fps, (width, height))
 
 while True: 
         
@@ -89,9 +84,6 @@ while True:
       
     writer.write(frame)
         
-   
 cap.release()
 writer.release()
 cv2.destroyAllWindows()
-
-print(time.time() - start)
