@@ -1,0 +1,26 @@
+from imageai.Detection import VideoObjectDetection
+import os
+from matplotlib import pyplot as plt
+
+execution_path = os.getcwd()
+resized = False
+
+def forFrame(frame_number, output_array, output_count, returned_frame):
+    counter = 0
+    file = open('person_count.txt', 'a')
+    for eachItem in output_count:                            
+        if eachItem == 'person':                           #eachItem이 사람이면 
+            file.write(str(output_count[eachItem]) + '\n') #사람의 수를 file로 저장
+    file.close()
+    global resized
+
+video_detector = VideoObjectDetection()
+video_detector.setModelTypeAsYOLOv3()
+video_detector.setModelPath(os.path.join(execution_path, "models/yolo.h5"))
+video_detector.loadModel()
+
+video_detector.detectObjectsFromVideo(input_file_path=os.path.join(execution_path, "videos/v1_mtcnn.mp4"), 
+                                      output_file_path=os.path.join(execution_path, "videos/v1_yolo") ,  
+                                      frames_per_second=30, per_frame_function=forFrame,  
+                                      minimum_percentage_probability=50, 
+                                      return_detected_frame=True)
