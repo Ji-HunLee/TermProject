@@ -87,7 +87,7 @@ while True:
             cv2.circle(frame,(keypoints['mouth_left']), 2, (0,155,255), 2)
             cv2.circle(frame,(keypoints['mouth_right']), 2, (0,155,255), 2)
       
-        writer.write(frame)
+    writer.write(frame)
         
    
 cap.release()
