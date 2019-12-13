@@ -44,7 +44,7 @@ def load_training_data():
     flip_img = flip_img.resize((IMG_SIZE, IMG_SIZE), Image.ANTIALIAS)
     flip_img = np.array(flip_img)
     flip_img = np.fliplr(flip_img)
-    train_data_flip.append([flip_img, label])
+    train_data.append([flip_img, label])
 
   shuffle(train_data)
   return train_data, batch_size
